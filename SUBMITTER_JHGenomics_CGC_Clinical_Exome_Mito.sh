@@ -184,27 +184,9 @@
 # PIPELINE FILES #
 ##################
 
-	GENE_LIST="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/bed_files/RefSeqGene.GRCh37.rCRS.MT.bed"
-	CFTR_BED="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/bed_files/CFTR_ANNOTATED.bed"
-	BARCODE_SNPS="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/bed_files/CFTRFullGene_BarcodeSNPs.bed"
-	MANTA_CFTR_BED="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/bed_files/twistCFTRpanelregion_grch37.bed.gz"
-	CFTR_EXONS="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/bed_files/CFTR_EXONS.bed"
-	CFTR_FOCUSED="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/bed_files/CF_CFTR.NGS1.v1.140604.bed"
+	MT_PICARD_INTERVAL_LIST="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/resources/ClinExome_2020/MT.interval_list"
 
 	VERIFY_VCF="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/config_misc/Omni25_genotypes_1525_samples_v2.b37.PASS.ALL.sites.vcf"
-
-	MANTA_CONFIG="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/config_misc/configManta_CFTR.py.ini"
-
-	VEP_REF_CACHE="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/vep_data"
-	CRYPTSPLICE_DATA="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/cryptsplice_data"
-
-	# HGVS CDNA SUBMITTED TO VEP
-		CFTR2_VCF="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/CFTR2/CFTR2_plusDDL.vep.DaN.vcf.gz"
-
-		CFTR2_VEP_TABLE="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/CFTR2/CFTR2_plusDDL.vep.CFTR_ONLY.sort.no_header.txt"
-
-	# EXCEL FILE CONVERTED TO TAB DELIMITED TEXT WITH THE HEADER REMOVE AND SORTED BY HGVS CDNA
-		CFTR2_RAW_TABLE="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/CFTR2/CFTR2_plusDDL.sorted_cdna.no_header.txt"
 
 	# ANNOVAR PARAMETERS AND INPUTS
 		ANNOVAR_DATABASE_FILE="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/config_misc/CFTR.final.csv"
@@ -445,6 +427,7 @@ done
 				$ALIGNMENT_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
+				$FAMILY \
 				$SM_TAG \
 				$REF_GENOME \
 				$THREADS \
@@ -468,9 +451,34 @@ done
 				$ALIGNMENT_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
+				$FAMILY \
 				$SM_TAG \
 				$REF_GENOME \
 				$THREADS \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
+	######################################
+	# convert full cram file back to bam #
+	######################################
+
+		COLLECTHSMETRICS_MT ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A01-A01-COLLECTHSMETRICS_MT"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-COLLECTHSMETRICS_MT.log" \
+				-hold_jid A01-CRAM_TO_BAM_FULL"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A02-CRAM_TO_BAM_MT.sh \
+				$ALIGNMENT_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$SM_TAG \
+				$REF_GENOME \
+				$MT_PICARD_INTERVAL_LIST \
 				$SAMPLE_SHEET \
 				$SUBMIT_STAMP
 		}
@@ -489,6 +497,8 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		CRAM_TO_BAM_FULL
 		echo sleep 0.1s
 		CRAM_TO_BAM_MT
+		echo sleep 0.1s
+		COLLECTHSMETRICS_MT
 		echo sleep 0.1s
 done
 
