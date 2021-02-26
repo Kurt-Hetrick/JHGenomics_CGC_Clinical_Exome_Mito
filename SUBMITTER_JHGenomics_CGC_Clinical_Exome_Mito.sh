@@ -435,9 +435,9 @@ done
 				$SUBMIT_STAMP
 		}
 
-	######################################
-	# convert full cram file back to bam #
-	######################################
+	##############################################################
+	# convert cram file back to bam just for mitochondrial reads #
+	##############################################################
 
 		CRAM_TO_BAM_MT ()
 		{
@@ -483,6 +483,29 @@ done
 				$SUBMIT_STAMP
 		}
 
+	#####################################################
+	# run mutect2 in mitochondria mode on full bam file #
+	#####################################################
+
+		MUTECT2_MT ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A01-A02-MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-MUTECT2_MT.log" \
+				-hold_jid A01-CRAM_TO_BAM_FULL"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A02-CRAM_TO_BAM_MT.sh \
+				$ALIGNMENT_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$SM_TAG \
+				$REF_GENOME \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
 ##############################################
 # run alignment steps after bwa to cram file #
 ##############################################
@@ -499,6 +522,8 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		CRAM_TO_BAM_MT
 		echo sleep 0.1s
 		COLLECTHSMETRICS_MT
+		echo sleep 0.1s
+		MUTECT2_MT
 		echo sleep 0.1s
 done
 
