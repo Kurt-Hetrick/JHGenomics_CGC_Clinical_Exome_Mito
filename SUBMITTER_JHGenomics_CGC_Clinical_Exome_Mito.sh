@@ -186,7 +186,9 @@
 
 	MT_PICARD_INTERVAL_LIST="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/resources/ClinExome_2020/MT.interval_list"
 
-	VERIFY_VCF="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/config_misc/Omni25_genotypes_1525_samples_v2.b37.PASS.ALL.sites.vcf"
+	MT_MASK="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/resources/hg37_MT_blacklist_sites.hg37.MT.bed"
+
+	GNOMAD_MT="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/resources/GRCh37_MT_gnomAD.vcf.gz"
 
 	# ANNOVAR PARAMETERS AND INPUTS
 		ANNOVAR_DATABASE_FILE="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/resources/config_misc/CFTR.final.csv"
@@ -373,6 +375,8 @@
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/GVCF \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MITO_OUTPUT/mitomode_results \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MITO_OUTPUT/eklipse_results \
+		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MITO_OUTPUT/Haplotypes \
+		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MITO_OUTPUT/anno2019vers/withCV_DB150 \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/{ALIGNMENT_SUMMARY,ANNOVAR,PICARD_DUPLICATES,TI_TV,VERIFYBAMID,VERIFYBAMID_AUTO,RG_HEADER,QUALITY_YIELD,ERROR_SUMMARY} \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/BAIT_BIAS/{METRICS,SUMMARY} \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/PRE_ADAPTER/{METRICS,SUMMARY} \
