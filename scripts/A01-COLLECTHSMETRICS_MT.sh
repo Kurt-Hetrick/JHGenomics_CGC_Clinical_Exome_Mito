@@ -46,12 +46,12 @@ START_COLLECTHSMETRICS_MT=`date '+%s'` # capture time process starts for wall cl
 		CMD="singularity exec $ALIGNMENT_CONTAINER java -jar" \
 		CMD=$CMD" /gatk/gatk.jar" \
 		CMD=$CMD" CollectHsMetrics" \
-			CMD=$CMD" --input $CORE_PATH/$PROJECT/TEMP/$SM_TAG".bam"" \
+			CMD=$CMD" --input $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/BAM/$SM_TAG".bam"" \
 			CMD=$CMD" --reference $REF_GENOME" \
 			CMD=$CMD" --TARGET_INTERVALS $MT_PICARD_INTERVAL_LIST" \
 			CMD=$CMD" --BAIT_INTERVALS $MT_PICARD_INTERVAL_LIST" \
-			CMD=$CMD" --PER_BASE_COVERAGE $SM_TAG"_per_base_cov.tsv"" \
-			CMD=$CMD" --OUTPUT $SM_TAG".output.metrics""
+			CMD=$CMD" --PER_BASE_COVERAGE $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MITO_OUTPUT/COLLECTHSMETRICS_MT/$SM_TAG"_per_base_cov.tsv"" \
+			CMD=$CMD" --OUTPUT $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MITO_OUTPUT/COLLECTHSMETRICS_MT/$SM_TAG".output.metrics""
 
 	# write command line to file and execute the command line
 
