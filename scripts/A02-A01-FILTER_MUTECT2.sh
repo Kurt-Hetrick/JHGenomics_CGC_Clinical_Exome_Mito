@@ -28,30 +28,31 @@
 	CORE_PATH=$2
 
 	PROJECT=$3
-	SM_TAG=$4
-	REF_GENOME=$5
+	FAMILY=$4
+	SM_TAG=$5
+	REF_GENOME=$6
 
-	SAMPLE_SHEET=$6
+	SAMPLE_SHEET=$7
 		SAMPLE_SHEET_NAME=$(basename $SAMPLE_SHEET .csv)
-	SUBMIT_STAMP=$7
+	SUBMIT_STAMP=$8
 
 ## run collecthsmetrics on full bam file targeting only the mt genome
 
-START_FILTER_MUTECT2=`date '+%s'` # capture time process starts for wall clock tracking purposes.
+START_FILTER_MUTECT2_MT=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 
 	# construct command line
 
 		CMD="singularity exec $ALIGNMENT_CONTAINER java -jar" \
 		CMD=$CMD" /gatk/gatk.jar" \
 		CMD=$CMD" FilterMutectCalls" \
-			CMD=$CMD" --variant ./raw.vcf" \
+			CMD=$CMD" --variant $CORE_PATH/$PROJECT/TEMP/$SM_TAG".MUTECT2_MT_RAW.vcf"" \
 			CMD=$CMD" --reference $REF_GENOME" \
 			CMD=$CMD" --mitochondria-mode true" \
 			CMD=$CMD" --max-alt-allele-count 4" \
 			CMD=$CMD" --min-allele-fraction 0.03" \
 			CMD=$CMD" --contamination-estimate 0.0" \
-			CMD=$CMD" --stats ./raw.vcf.stats" \
-			CMD=$CMD" --output ./filtered.vcf" \
+			CMD=$CMD" --stats $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/MUTECT2_MT/$SM_TAG.MUTECT2_MT.raw.vcf.stats" \
+			CMD=$CMD" --output $CORE_PATH/$PROJECT/TEMP/$SM_TAG".MUTECT2_MT_FILTERED.vcf"" \
 
 	# write command line to file and execute the command line
 
@@ -73,11 +74,11 @@ START_FILTER_MUTECT2=`date '+%s'` # capture time process starts for wall clock t
 			exit $SCRIPT_STATUS
 		fi
 
-END_FILTER_MUTECT2=`date '+%s'` # capture time process starts for wall clock tracking purposes.
+END_FILTER_MUTECT2_MT=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 
 # write out timing metrics to file
 
-	echo $SM_TAG"_"$PROJECT",F.01,FILTER_MUTECT2,"$HOSTNAME","$START_FILTER_MUTECT2","$END_FILTER_MUTECT2 \
+	echo $SM_TAG"_"$PROJECT",F.01,FILTER_MUTECT2_MT,"$HOSTNAME","$START_FILTER_MUTECT2_MT","$END_FILTER_MUTECT2_MT \
 	>> $CORE_PATH/$PROJECT/REPORTS/$PROJECT".WALL.CLOCK.TIMES.csv"
 
 # exit with the signal from samtools bam to cram

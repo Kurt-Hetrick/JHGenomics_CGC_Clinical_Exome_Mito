@@ -365,7 +365,8 @@
 
 	MAKE_PROJ_DIR_TREE ()
 	{
-		mkdir -p $CORE_PATH/$PROJECT/{FASTQ,LOGS,SUBMISSION_SETUP,TEMP} \
+		mkdir -p $CORE_PATH/$PROJECT/{FASTQ,SUBMISSION_SETUP,TEMP} \
+		$CORE_PATH/$PROJECT/LOGS/$SM_TAG \
 		$CORE_PATH/$PROJECT/$FAMILY/{PCA,RELATEDNESS} \
 		$CORE_PATH/$PROJECT/$FAMILY/VCF/{RAW,VQSR} \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/BAM \
@@ -385,7 +386,7 @@
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/INSERT_SIZE/{METRICS,PDF} \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/MEAN_QUALITY_BY_CYCLE/{METRICS,PDF} \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/PRE_ADAPTER/{METRICS,SUMMARY} \
-		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MITO_OUTPUT/COLLECTHSMETRICS_MT
+		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/{COLLECTHSMETRICS_MT,MUTECT2_MT}
 	}
 
 	SETUP_PROJECT ()
@@ -460,6 +461,30 @@ done
 				$SUBMIT_STAMP
 		}
 
+	#######################################
+	# apply filters to mutect2 vcf output #
+	#######################################
+
+		FILTER_MUTECT2_MT ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A02-A01-FILTER_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-FILTER_MUTECT2_MT.log" \
+				-hold_jid A02-MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A02-A01-FILTER_MUTECT2_MT.sh \
+				$ALIGNMENT_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$FAMILY \
+				$SM_TAG \
+				$REF_GENOME \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
 ##############################################
 # run alignment steps after bwa to cram file #
 ##############################################
@@ -471,11 +496,11 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		| uniq );
 	do
 		CREATE_SAMPLE_ARRAY
-		CRAM_TO_BAM_MT
-		echo sleep 0.1s
 		COLLECTHSMETRICS_MT
 		echo sleep 0.1s
 		MUTECT2_MT
+		echo sleep 0.1s
+		FILTER_MUTECT2_MT
 		echo sleep 0.1s
 done
 
