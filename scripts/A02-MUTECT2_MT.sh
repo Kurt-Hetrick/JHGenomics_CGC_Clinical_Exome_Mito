@@ -36,7 +36,7 @@
 		SAMPLE_SHEET_NAME=$(basename $SAMPLE_SHEET .csv)
 	SUBMIT_STAMP=$8
 
-## run collecthsmetrics on full bam file targeting only the mt genome
+## RUN MUTECT2 IN MT MODE
 
 START_MUTECT2_MT=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 

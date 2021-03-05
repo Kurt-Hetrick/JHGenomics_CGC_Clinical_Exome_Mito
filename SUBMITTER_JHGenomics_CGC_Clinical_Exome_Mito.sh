@@ -426,7 +426,7 @@ done
 				$STANDARD_QUEUE_QSUB_ARG \
 			-N A01-COLLECTHSMETRICS_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-COLLECTHSMETRICS_MT.log" \
-			$SCRIPT_DIR/A02-CRAM_TO_BAM_MT.sh \
+			$SCRIPT_DIR/A01-COLLECTHSMETRICS_MT.sh \
 				$ALIGNMENT_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
@@ -450,7 +450,7 @@ done
 				$STANDARD_QUEUE_QSUB_ARG \
 			-N A02-MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-MUTECT2_MT.log" \
-			$SCRIPT_DIR/A02-CRAM_TO_BAM_MT.sh \
+			$SCRIPT_DIR/A02-MUTECT2_MT.sh \
 				$ALIGNMENT_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
@@ -478,6 +478,29 @@ done
 				$ALIGNMENT_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
+				$SM_TAG \
+				$REF_GENOME \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
+	###################################################
+	# apply masks to mutect2 mito filtered vcf output #
+	###################################################
+
+		MASK_MUTECT2_MT ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A02-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-MASK_MUTECT2_MT.log" \
+				-hold_jid A02-A01-FILTER_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A02-A01-A01-MASK_MUTECT2_MT.sh \
+				$ALIGNMENT_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
 				$FAMILY \
 				$SM_TAG \
 				$REF_GENOME \
@@ -485,9 +508,9 @@ done
 				$SUBMIT_STAMP
 		}
 
-##############################################
-# run alignment steps after bwa to cram file #
-##############################################
+###############################################################
+# run steps centered on gatk's mutect2 mitochondrial workflow #
+###############################################################
 
 for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
@@ -501,6 +524,8 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		MUTECT2_MT
 		echo sleep 0.1s
 		FILTER_MUTECT2_MT
+		echo sleep 0.1s
+		MASK_MUTECT2_MT
 		echo sleep 0.1s
 done
 
