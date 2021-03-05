@@ -103,12 +103,6 @@
 
 				STANDARD_QUEUE_QSUB_ARG=" -q $QUEUE_LIST"
 
-			# SPLICEAI WILL NOT RUN ON SERVERS THAT DO NOT HAVE INTEL AVX CHIPSETS.
-			# which for us is the c6100s (prod.q and rnd.q).
-			# so I am removing those from $QUEUE_LIST if present and create a new variable to run spliceai
-
-				SPLICEAI_QUEUE_QSUB_ARG=$(echo " -q $QUEUE_LIST" | sed 's/rnd.q//g' | sed 's/prod.q//g')
-
 			# REQUESTING AN ENTIRE SERVER (specifically for cgc.q)
 
 				REQUEST_ENTIRE_SERVER_QSUB_ARG=" -pe slots 5"
@@ -117,64 +111,15 @@
 # PIPELINE PROGRAMS #
 #####################
 
-	ALIGNMENT_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/ddl_ce_control_align-0.0.4.simg"
-		# contains the following software and is on Ubuntu 16.04.5 LTS
-			# gatk 4.0.11.0 (base image). also contains the following.
-				# Python 3.6.2 :: Continuum Analytics, Inc.
-					# samtools 0.1.19
-					# bcftools 0.1.19
-					# bedtools v2.25.0
-					# bgzip 1.2.1
-					# tabix 1.2.1
-					# samtools, bcftools, bgzip and tabix will be replaced with newer versions.
-					# R 3.2.5
-						# dependencies = c("gplots","digest", "gtable", "MASS", "plyr", "reshape2", "scales", "tibble", "lazyeval")    # for ggplot2
-						# getopt_1.20.0.tar.gz
-						# optparse_1.3.2.tar.gz
-						# data.table_1.10.4-2.tar.gz
-						# gsalib_2.1.tar.gz
-						# ggplot2_2.2.1.tar.gz
-					# openjdk version "1.8.0_181"
-					# /gatk/gatk.jar -> /gatk/gatk-package-4.0.11.0-local.jar
+	MITO_MUTECT2_CONTAINER="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/containers/mito_mutect2-4.1.3.0.0.simg"
+		# uses broadinstitute/gatk:4.1.3.0 as the base image (as /gatk/gatk.jar)
 			# added
-				# picard.jar 2.17.0 (as /gatk/picard.jar)
-				# samblaster-v.0.1.24
-				# sambamba-0.6.8
-				# bwa-0.7.15
-				# datamash-1.6
-				# verifyBamID v1.1.3
-				# samtools 1.10
-				# bgzip 1.10
-				# tabix 1.10
-				# bcftools 1.10.2
-				# parallel 20161222
+				# bcftools-1.10.2
+				# haplogrep-2.1.20.jar (as /jars/haplogrep-2.1.20.jar)
+				# annovar
 
-	GATK_3_7_0_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/gatk3-3.7-0.simg"
-		# singularity pull docker://broadinstitute/gatk3:3.7-0
-			# used for generating the depth of coverage reports.
-				# comes with R 3.1.1 with appropriate packages needed to create gatk pdf output
-				# also comes with some version of java 1.8
-				# jar file is /usr/GenomeAnalysisTK.jar
-
-	GATK_3_5_0_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/gatk3-3.5-0.simg"
-		# singularity pull docker://broadinstitute/gatk3:3.7-0
-
-	MANTA_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/manta-1.6.0.0.simg"
-		# singularity 2 creates a simg file (this is what I used)
-		# singularity 3 (this is what the cgc nodes have) creates a .sif file
-
-	SPLICEAI_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/spliceai-1.3.1.1.simg"
-		# singularity pull docker://ubuntudocker.jhgenomics.jhu.edu:443/illumina/spliceai:1.3.1.1
-			# has to run an servers where the CPU supports AVX
-			# the only ones that don't are the c6100s (prod.q,rnd.q,c6100-4,c6100-8)
-
-	VEP_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/vep-102.0.simg"
-
-	CRYPTSPLICE_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/cryptsplice-1.simg"
-
-	VT_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/vt-0.5772.ca352e2c.0.simg"
-
-	ANNOVAR_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/annovarwrangler-20210126.simg"
+	MITO_EKLIPSE_CONTAINER="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/containers/mito_eklipse-master-c25931b.0.simg"
+		# https://github.com/dooguypapua/eKLIPse AND all of its dependencies
 
 	COMBINE_ANNOVAR_WITH_SPLICING_R_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/r-cftr-3.4.4.1.simg"
 
@@ -427,7 +372,7 @@ done
 			-N A01-COLLECTHSMETRICS_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-COLLECTHSMETRICS_MT.log" \
 			$SCRIPT_DIR/A01-COLLECTHSMETRICS_MT.sh \
-				$ALIGNMENT_CONTAINER \
+				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
 				$FAMILY \
@@ -451,7 +396,7 @@ done
 			-N A02-MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-MUTECT2_MT.log" \
 			$SCRIPT_DIR/A02-MUTECT2_MT.sh \
-				$ALIGNMENT_CONTAINER \
+				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
 				$FAMILY \
@@ -475,7 +420,7 @@ done
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-FILTER_MUTECT2_MT.log" \
 				-hold_jid A02-MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 			$SCRIPT_DIR/A02-A01-FILTER_MUTECT2_MT.sh \
-				$ALIGNMENT_CONTAINER \
+				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
 				$SM_TAG \
@@ -498,7 +443,7 @@ done
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-MASK_MUTECT2_MT.log" \
 				-hold_jid A02-A01-FILTER_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 			$SCRIPT_DIR/A02-A01-A01-MASK_MUTECT2_MT.sh \
-				$ALIGNMENT_CONTAINER \
+				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
 				$FAMILY \
@@ -522,7 +467,7 @@ done
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-HAPLOGREP2_MUTECT2_MT.log" \
 				-hold_jid A02-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 			$SCRIPT_DIR/A02-A01-A01-A01-HAPLOGREP2_MUTECT2_MT.sh \
-				$ALIGNMENT_CONTAINER \
+				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
 				$FAMILY \
@@ -546,7 +491,7 @@ done
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-GNOMAD_MUTECT2_MT.log" \
 				-hold_jid A02-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT\
 			$SCRIPT_DIR/A02-A01-A01-A02-GNOMAD_MUTECT2_MT.sh \
-				$ALIGNMENT_CONTAINER \
+				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
 				$FAMILY \
@@ -598,7 +543,7 @@ done
 			-N A01-SUBSET_BAM_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-SUBSET_BAM_MT.log" \
 			$SCRIPT_DIR/A01-SUBSET_BAM_MT.sh \
-				$ALIGNMENT_CONTAINER \
+				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
 				$FAMILY \
@@ -613,90 +558,90 @@ done
 # run steps for eklipse workflow #
 ##################################
 
-for SAMPLE in $(awk 1 $SAMPLE_SHEET \
-		| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
-		| awk 'BEGIN {FS=","} NR>1 {print $8}' \
-		| sort \
-		| uniq );
-	do
-		CREATE_SAMPLE_ARRAY
-		CRAM_TO_BAM_MT
-		echo sleep 0.1s
-done
+# for SAMPLE in $(awk 1 $SAMPLE_SHEET \
+# 		| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
+# 		| awk 'BEGIN {FS=","} NR>1 {print $8}' \
+# 		| sort \
+# 		| uniq );
+# 	do
+# 		CREATE_SAMPLE_ARRAY
+# 		CRAM_TO_BAM_MT
+# 		echo sleep 0.1s
+# done
 
 #############################
 ##### END PROJECT TASKS #####
 #############################
 
-# grab email addy
+# # grab email addy
 
-	SEND_TO=`cat $SCRIPT_DIR/../email_lists.txt`
+# 	SEND_TO=`cat $SCRIPT_DIR/../email_lists.txt`
 
-# grab submitter's name
+# # grab submitter's name
 
-	PERSON_NAME=`getent passwd | awk 'BEGIN {FS=":"} $1=="'$SUBMITTER_ID'" {print $5}'`
+# 	PERSON_NAME=`getent passwd | awk 'BEGIN {FS=":"} $1=="'$SUBMITTER_ID'" {print $5}'`
 
-# build hold id for qc report prep per sample, per project
+# # build hold id for qc report prep per sample, per project
 
-	BUILD_HOLD_ID_PATH_PROJECT_WRAP_UP ()
-	{
-		HOLD_ID_PATH="-hold_jid "
+# 	BUILD_HOLD_ID_PATH_PROJECT_WRAP_UP ()
+# 	{
+# 		HOLD_ID_PATH="-hold_jid "
 
-		for SAMPLE in $(awk 1 $SAMPLE_SHEET \
-			| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
-			| awk 'BEGIN {FS=","} $1=="'$PROJECT'" {print $8}' \
-			| sort \
-			| uniq);
-		do
-			CREATE_SAMPLE_ARRAY
-			HOLD_ID_PATH=$HOLD_ID_PATH"X.01_QC_REPORT_PREP"_"$SGE_SM_TAG"_"$PROJECT"","
-			HOLD_ID_PATH=`echo $HOLD_ID_PATH | sed 's/@/_/g'`
-		done
-	}
+# 		for SAMPLE in $(awk 1 $SAMPLE_SHEET \
+# 			| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
+# 			| awk 'BEGIN {FS=","} $1=="'$PROJECT'" {print $8}' \
+# 			| sort \
+# 			| uniq);
+# 		do
+# 			CREATE_SAMPLE_ARRAY
+# 			HOLD_ID_PATH=$HOLD_ID_PATH"X.01_QC_REPORT_PREP"_"$SGE_SM_TAG"_"$PROJECT"","
+# 			HOLD_ID_PATH=`echo $HOLD_ID_PATH | sed 's/@/_/g'`
+# 		done
+# 	}
 
-# run end project functions (qc report, file clean-up) for each project
+# # run end project functions (qc report, file clean-up) for each project
 
-	PROJECT_WRAP_UP ()
-	{
-		echo \
-		qsub \
-			$QSUB_ARGS \
-			$STANDARD_QUEUE_QSUB_ARG \
-		-N X.01-X.01_END_PROJECT_TASKS"_"$PROJECT \
-			-o $CORE_PATH/$PROJECT/LOGS/$PROJECT"-END_PROJECT_TASKS.log" \
-		$HOLD_ID_PATH \
-		$SCRIPT_DIR/X.01-X.01-END_PROJECT_TASKS.sh \
-			$ALIGNMENT_CONTAINER \
-			$CORE_PATH \
-			$PROJECT \
-			$SCRIPT_DIR \
-			$SUBMITTER_ID \
-			$SAMPLE_SHEET \
-			$SUBMIT_STAMP \
-			$SEND_TO \
-			$THREADS
-	}
+# 	PROJECT_WRAP_UP ()
+# 	{
+# 		echo \
+# 		qsub \
+# 			$QSUB_ARGS \
+# 			$STANDARD_QUEUE_QSUB_ARG \
+# 		-N X.01-X.01_END_PROJECT_TASKS"_"$PROJECT \
+# 			-o $CORE_PATH/$PROJECT/LOGS/$PROJECT"-END_PROJECT_TASKS.log" \
+# 		$HOLD_ID_PATH \
+# 		$SCRIPT_DIR/X.01-X.01-END_PROJECT_TASKS.sh \
+# 			$MITO_MUTECT2_CONTAINER \
+# 			$CORE_PATH \
+# 			$PROJECT \
+# 			$SCRIPT_DIR \
+# 			$SUBMITTER_ID \
+# 			$SAMPLE_SHEET \
+# 			$SUBMIT_STAMP \
+# 			$SEND_TO \
+# 			$THREADS
+# 	}
 
-# final loop
+# # final loop
 
-for PROJECT in $(awk 1 $SAMPLE_SHEET \
-			| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
-			| awk 'BEGIN {FS=","} NR>1 {print $1}' \
-			| sort \
-			| uniq);
-	do
-		BUILD_HOLD_ID_PATH_PROJECT_WRAP_UP
-		PROJECT_WRAP_UP
-done
+# for PROJECT in $(awk 1 $SAMPLE_SHEET \
+# 			| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
+# 			| awk 'BEGIN {FS=","} NR>1 {print $1}' \
+# 			| sort \
+# 			| uniq);
+# 	do
+# 		BUILD_HOLD_ID_PATH_PROJECT_WRAP_UP
+# 		PROJECT_WRAP_UP
+# done
 
-# MESSAGE THAT SAMPLE SHEET HAS FINISHED SUBMITTING
+# # MESSAGE THAT SAMPLE SHEET HAS FINISHED SUBMITTING
 
-printf "echo\n"
+# printf "echo\n"
 
-printf "echo $SAMPLE_SHEET has finished submitting at `date`\n"
+# printf "echo $SAMPLE_SHEET has finished submitting at `date`\n"
 
-# EMAIL WHEN DONE SUBMITTING
+# # EMAIL WHEN DONE SUBMITTING
 
-printf "$SAMPLE_SHEET\nhas finished submitting at\n`date`\nby `whoami`" \
-	| mail -s "$PERSON_NAME has submitted SUBMITTER_CFTR_Full_Gene_Sequencing_Pipeline.sh" \
-		$SEND_TO
+# printf "$SAMPLE_SHEET\nhas finished submitting at\n`date`\nby `whoami`" \
+# 	| mail -s "$PERSON_NAME has submitted SUBMITTER_CFTR_Full_Gene_Sequencing_Pipeline.sh" \
+# 		$SEND_TO
