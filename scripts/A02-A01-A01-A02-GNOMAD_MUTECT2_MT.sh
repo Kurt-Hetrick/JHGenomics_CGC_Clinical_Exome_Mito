@@ -28,16 +28,17 @@
 	CORE_PATH=$2
 
 	PROJECT=$3
-	SM_TAG=$4
-	GNOMAD_MT=$5
+	FAMILY=$4
+	SM_TAG=$5
+	GNOMAD_MT=$6
 
-	SAMPLE_SHEET=$6
+	SAMPLE_SHEET=$7
 		SAMPLE_SHEET_NAME=$(basename $SAMPLE_SHEET .csv)
-	SUBMIT_STAMP=$7
+	SUBMIT_STAMP=$8
 
-## add gnomad to mutect2 vcf
+## add gnomad info annotation to mutect2 vcf
 
-START_GNOMAD_MUTECT2=`date '+%s'` # capture time process starts for wall clock tracking purposes.
+START_GNOMAD_MUTECT2_MT=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 
 	# construct command line
 
@@ -46,8 +47,8 @@ START_GNOMAD_MUTECT2=`date '+%s'` # capture time process starts for wall clock t
 			CMD=$CMD" --force" \
 			CMD=$CMD" -a $GNOMAD_MT" \
 			CMD=$CMD" -c INFO" \
-			CMD=$CMD" $SAMPLE_ID".vcf.gz"" \
-			CMD=$CMD" > $SAMPLE_ID".intermediate.vcf""
+			CMD=$CMD" $CORE_PATH/$PROJECT/TEMP/$SM_TAG".MUTECT2_MT_FILTERED_MASKED.vcf.gz"" \
+			CMD=$CMD" > $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/MUTECT2/$SM_TAG".MUTECT2_MT.vcf""
 
 	# write command line to file and execute the command line
 
@@ -69,11 +70,11 @@ START_GNOMAD_MUTECT2=`date '+%s'` # capture time process starts for wall clock t
 			exit $SCRIPT_STATUS
 		fi
 
-END_GNOMAD_MUTECT2=`date '+%s'` # capture time process starts for wall clock tracking purposes.
+END_GNOMAD_MUTECT2_MT=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 
 # write out timing metrics to file
 
-	echo $SM_TAG"_"$PROJECT",F.01,GNOMAD_MUTECT2,"$HOSTNAME","$START_GNOMAD_MUTECT2","$END_GNOMAD_MUTECT2 \
+	echo $SM_TAG"_"$PROJECT",F.01,GNOMAD_MUTECT2_MT,"$HOSTNAME","$START_GNOMAD_MUTECT2_MT","$END_GNOMAD_MUTECT2_MT \
 	>> $CORE_PATH/$PROJECT/REPORTS/$PROJECT".WALL.CLOCK.TIMES.csv"
 
 # exit with the signal from samtools bam to cram

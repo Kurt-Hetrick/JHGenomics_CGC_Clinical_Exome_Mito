@@ -508,9 +508,9 @@ done
 				$SUBMIT_STAMP
 		}
 
-	###################################################
-	# apply masks to mutect2 mito filtered vcf output #
-	###################################################
+	#############################################
+	# run haplogrep2 on mutect2 mito vcf output #
+	#############################################
 
 		HAPLOGREP2_MUTECT2_MT ()
 		{
@@ -520,7 +520,7 @@ done
 				$STANDARD_QUEUE_QSUB_ARG \
 			-N A02-A01-A01-A01-HAPLOGREP2_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-HAPLOGREP2_MUTECT2_MT.log" \
-				-hold_jid A02-A01-A01-HAPLOGREP2_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+				-hold_jid A02-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 			$SCRIPT_DIR/A02-A01-A01-A01-HAPLOGREP2_MUTECT2_MT.sh \
 				$ALIGNMENT_CONTAINER \
 				$CORE_PATH \
@@ -528,6 +528,30 @@ done
 				$FAMILY \
 				$SM_TAG \
 				$REF_GENOME \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
+	#############################################################
+	# add gnomad annotation to info field of mutect2 vcf output #
+	#############################################################
+
+		GNOMAD_MUTECT2_MT ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A02-A01-A01-A02-GNOMAD_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-GNOMAD_MUTECT2_MT.log" \
+				-hold_jid A02-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT\
+			$SCRIPT_DIR/A02-A01-A01-A02-GNOMAD_MUTECT2_MT.sh \
+				$ALIGNMENT_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$FAMILY \
+				$SM_TAG \
+				$GNOMAD_MT \
 				$SAMPLE_SHEET \
 				$SUBMIT_STAMP
 		}
@@ -552,6 +576,8 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		MASK_MUTECT2_MT
 		echo sleep 0.1s
 		HAPLOGREP2_MUTECT2_MT
+		echo sleep 0.1s
+		GNOMAD_MUTECT2_MT
 		echo sleep 0.1s
 done
 
