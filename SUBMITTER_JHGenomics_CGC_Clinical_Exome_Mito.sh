@@ -386,7 +386,7 @@
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/INSERT_SIZE/{METRICS,PDF} \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/MEAN_QUALITY_BY_CYCLE/{METRICS,PDF} \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/PRE_ADAPTER/{METRICS,SUMMARY} \
-		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/{COLLECTHSMETRICS_MT,MUTECT2_MT}
+		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/{COLLECTHSMETRICS_MT,MUTECT2_MT,HAPLOTYPES}
 	}
 
 	SETUP_PROJECT ()
@@ -508,6 +508,30 @@ done
 				$SUBMIT_STAMP
 		}
 
+	###################################################
+	# apply masks to mutect2 mito filtered vcf output #
+	###################################################
+
+		HAPLOGREP2_MUTECT2_MT ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A02-A01-A01-A01-HAPLOGREP2_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-HAPLOGREP2_MUTECT2_MT.log" \
+				-hold_jid A02-A01-A01-HAPLOGREP2_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A02-A01-A01-A01-HAPLOGREP2_MUTECT2_MT.sh \
+				$ALIGNMENT_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$FAMILY \
+				$SM_TAG \
+				$REF_GENOME \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
 ###############################################################
 # run steps centered on gatk's mutect2 mitochondrial workflow #
 ###############################################################
@@ -526,6 +550,8 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		FILTER_MUTECT2_MT
 		echo sleep 0.1s
 		MASK_MUTECT2_MT
+		echo sleep 0.1s
+		HAPLOGREP2_MUTECT2_MT
 		echo sleep 0.1s
 done
 
