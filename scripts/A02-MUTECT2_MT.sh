@@ -28,12 +28,13 @@
 	CORE_PATH=$2
 
 	PROJECT=$3
-	SM_TAG=$4
-	REF_GENOME=$5
+	FAMILY=$4
+	SM_TAG=$5
+	REF_GENOME=$6
 
-	SAMPLE_SHEET=$6
+	SAMPLE_SHEET=$7
 		SAMPLE_SHEET_NAME=$(basename $SAMPLE_SHEET .csv)
-	SUBMIT_STAMP=$7
+	SUBMIT_STAMP=$8
 
 ## run collecthsmetrics on full bam file targeting only the mt genome
 
@@ -44,7 +45,7 @@ START_MUTECT2_MT=`date '+%s'` # capture time process starts for wall clock track
 		CMD="singularity exec $ALIGNMENT_CONTAINER java -jar" \
 		CMD=$CMD" /gatk/gatk.jar" \
 		CMD=$CMD" Mutect2" \
-			CMD=$CMD" --input $CORE_PATH/$PROJECT/TEMP/$SM_TAG".bam"" \
+			CMD=$CMD" --input $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/BAM/$SM_TAG".bam"" \
 			CMD=$CMD" --reference $REF_GENOME" \
 			CMD=$CMD" --mitochondria-mode true" \
 			CMD=$CMD" --max-mnp-distance 0" \
@@ -62,7 +63,7 @@ START_MUTECT2_MT=`date '+%s'` # capture time process starts for wall clock track
 			CMD=$CMD" --likelihood-calculation-engine PairHMM" \
 			CMD=$CMD" --annotation StrandBiasBySample" \
 			CMD=$CMD" --intervals MT:1-16569" \
-			CMD=$CMD" --output ./raw.vcf" \
+			CMD=$CMD" --output $CORE_PATH/$PROJECT/TEMP/$SM_TAG".MUTECT2_MT_RAW.vcf""
 
 	# write command line to file and execute the command line
 
