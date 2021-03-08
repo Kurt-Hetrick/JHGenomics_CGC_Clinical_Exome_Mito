@@ -521,8 +521,8 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		echo sleep 0.1s
 		MASK_MUTECT2_MT
 		echo sleep 0.1s
-		# HAPLOGREP2_MUTECT2_MT
-		# echo sleep 0.1s
+		HAPLOGREP2_MUTECT2_MT
+		echo sleep 0.1s
 		# GNOMAD_MUTECT2_MT
 		# echo sleep 0.1s
 done
