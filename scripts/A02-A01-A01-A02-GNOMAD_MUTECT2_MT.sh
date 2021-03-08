@@ -24,7 +24,7 @@
 
 # INPUT VARIABLES
 
-	ALIGNMENT_CONTAINER=$1
+	MITO_MUTECT2_CONTAINER=$1
 	CORE_PATH=$2
 
 	PROJECT=$3
@@ -42,13 +42,13 @@ START_GNOMAD_MUTECT2_MT=`date '+%s'` # capture time process starts for wall cloc
 
 	# construct command line
 
-		CMD="singularity exec $ALIGNMENT_CONTAINER bcftools" \
+		CMD="singularity exec $MITO_MUTECT2_CONTAINER bcftools" \
 		CMD=$CMD" annotate" \
 			CMD=$CMD" --force" \
 			CMD=$CMD" -a $GNOMAD_MT" \
 			CMD=$CMD" -c INFO" \
 			CMD=$CMD" $CORE_PATH/$PROJECT/TEMP/$SM_TAG".MUTECT2_MT_FILTERED_MASKED.vcf.gz"" \
-			CMD=$CMD" > $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/MUTECT2/$SM_TAG".MUTECT2_MT.vcf""
+			CMD=$CMD" > $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/MUTECT2_MT/$SM_TAG".MUTECT2_MT.vcf""
 
 	# write command line to file and execute the command line
 
