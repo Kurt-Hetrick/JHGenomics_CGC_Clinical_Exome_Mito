@@ -425,6 +425,7 @@ done
 				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
+				$FAMILY \
 				$SM_TAG \
 				$REF_GENOME \
 				$SAMPLE_SHEET \
@@ -518,8 +519,8 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		echo sleep 0.1s
 		MUTECT2_MT
 		echo sleep 0.1s
-		# FILTER_MUTECT2_MT
-		# echo sleep 0.1s
+		FILTER_MUTECT2_MT
+		echo sleep 0.1s
 		# MASK_MUTECT2_MT
 		# echo sleep 0.1s
 		# HAPLOGREP2_MUTECT2_MT
