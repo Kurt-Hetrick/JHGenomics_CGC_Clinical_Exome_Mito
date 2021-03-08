@@ -24,7 +24,7 @@
 
 # INPUT VARIABLES
 
-	ALIGNMENT_CONTAINER=$1
+	MITO_MUTECT2_CONTAINER=$1
 	CORE_PATH=$2
 
 	PROJECT=$3
@@ -43,11 +43,11 @@ START_COLLECTHSMETRICS_MT=`date '+%s'` # capture time process starts for wall cl
 
 	# construct command line
 
-		CMD="singularity exec $ALIGNMENT_CONTAINER java -jar" \
+		CMD="singularity exec $MITO_MUTECT2_CONTAINER java -jar" \
 		CMD=$CMD" /gatk/gatk.jar" \
 		CMD=$CMD" CollectHsMetrics" \
-			CMD=$CMD" --input $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/BAM/$SM_TAG".bam"" \
-			CMD=$CMD" --reference $REF_GENOME" \
+			CMD=$CMD" --INPUT $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/BAM/$SM_TAG".bam"" \
+			CMD=$CMD" --REFERENCE_SEQUENCE $REF_GENOME" \
 			CMD=$CMD" --TARGET_INTERVALS $MT_PICARD_INTERVAL_LIST" \
 			CMD=$CMD" --BAIT_INTERVALS $MT_PICARD_INTERVAL_LIST" \
 			CMD=$CMD" --PER_BASE_COVERAGE $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/COLLECTHSMETRICS_MT/$SM_TAG"_per_base_cov.tsv"" \

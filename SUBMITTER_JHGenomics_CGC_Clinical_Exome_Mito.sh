@@ -4,26 +4,28 @@
 
 	SAMPLE_SHEET=$1
 
-	PRIORITY=$2 # optional. how high you want the tasks to have when submitting.
-		# if no 2nd argument present then the default is -9.
+	PED_FILE=$2
+
+	PRIORITY=$3 # optional. how high you want the tasks to have when submitting.
+		# if no 3rd argument present then the default is -9.
 
 			if [[ ! $PRIORITY ]]
 				then
 				PRIORITY="-9"
 			fi
 
-	QUEUE_LIST=$3 # optional. the queues that you want to submit to.
-		# if you want to set this then you need to set the 2nd argument as well (even to the default)
-		# if no 3rd argument present then the default is cgc.q
+	QUEUE_LIST=$4 # optional. the queues that you want to submit to.
+		# if you want to set this then you need to set the 3rd argument as well (even to the default)
+		# if no 4th argument present then the default is cgc.q
 
 			if [[ ! $QUEUE_LIST ]]
 				then
 				QUEUE_LIST="cgc.q"
 			fi
 
-	THREADS=$4 # optional. how many cpu processors you want to use for programs that are multi-threaded
-		# if you want to set this then you need to set the 3rd argument as well (even to the default)
-		# if no 4th argument present then the default is 6
+	THREADS=$5 # optional. how many cpu processors you want to use for programs that are multi-threaded
+		# if you want to set this then you need to set the 4th argument as well (even to the default)
+		# if no 5th argument present then the default is 6
 
 			if [[ ! $THREADS ]]
 				then
@@ -129,7 +131,7 @@
 # PIPELINE FILES #
 ##################
 
-	MT_PICARD_INTERVAL_LIST="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/resources/ClinExome_2020/MT.interval_list"
+	MT_PICARD_INTERVAL_LIST="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/resources/MT.interval_list"
 
 	MT_MASK="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/resources/hg37_MT_blacklist_sites.hg37.MT.bed"
 
@@ -217,8 +219,8 @@
 	CREATE_SAMPLE_ARRAY ()
 	{
 		SAMPLE_ARRAY=(`awk 'BEGIN {FS="\t"; OFS="\t"} $8=="'$SAMPLE'" \
-			{split($19,INDEL,";"); \
-			print $1,$8,$9,$10,$12,$15,$16,$17,$18,INDEL[1],INDEL[2],$20,$21,$22,$23,$24}' \
+			{split($18,INDEL,";"); \
+			print $1,$8,$9,$10,$12,$14,$15,$16,$17,INDEL[1],INDEL[2],$20,$21,$22,$23,$24}' \
 				~/CGC_PIPELINE_TEMP/$MANIFEST_PREFIX.$PED_PREFIX.join.txt \
 				| sort \
 				| uniq`)
@@ -227,14 +229,14 @@
 
 			PROJECT=${SAMPLE_ARRAY[0]}
 
-		################################################################################
-		# 2 SKIP : FCID=flowcell that sample read group was performed on ###############
-		# 3 SKIP : Lane=lane of flowcell that sample read group was performed on] ######
-		# 4 SKIP : Index=sample barcode ################################################
-		# 5 SKIP : Platform=type of sequencing chemistry matching SAM specification ####
-		# 6 SKIP : Library_Name=library group of the sample read group #################
-		# 7 SKIP : Date=should be the run set up date to match the seq run folder name #
-		################################################################################
+			################################################################################
+			# 2 SKIP : FCID=flowcell that sample read group was performed on ###############
+			# 3 SKIP : Lane=lane of flowcell that sample read group was performed on] ######
+			# 4 SKIP : Index=sample barcode ################################################
+			# 5 SKIP : Platform=type of sequencing chemistry matching SAM specification ####
+			# 6 SKIP : Library_Name=library group of the sample read group #################
+			# 7 SKIP : Date=should be the run set up date to match the seq run folder name #
+			################################################################################
 
 		#  8  SM_Tag=sample ID
 
@@ -250,18 +252,18 @@
 
 			SEQUENCER_MODEL=${SAMPLE_ARRAY[3]}
 
-		#########################
-		# 11  SKIP : Seq_Exp_ID #
-		#########################
+			#########################
+			# 11  SKIP : Seq_Exp_ID #
+			#########################
 
 		# 12  Genome_Ref=the reference genome used in the analysis pipeline
 
 			REF_GENOME=${SAMPLE_ARRAY[4]}
 
-		#####################################
-		# 13  Operator: SKIP ################
-		# 14  Extra_VCF_Filter_Params: SKIP #
-		#####################################
+			#####################################
+			# 13  Operator: SKIP ################
+			# 14  Extra_VCF_Filter_Params: SKIP #
+			#####################################
 
 		# 15  TS_TV_BED_File=where ucsc coding exons overlap with bait and target bed files
 
@@ -310,7 +312,7 @@
 
 	MAKE_PROJ_DIR_TREE ()
 	{
-		mkdir -p $CORE_PATH/$PROJECT/{FASTQ,SUBMISSION_SETUP,TEMP} \
+		mkdir -p $CORE_PATH/$PROJECT/{FASTQ,SUBMISSION_SETUP,TEMP,COMMAND_LINES} \
 		$CORE_PATH/$PROJECT/LOGS/$SM_TAG \
 		$CORE_PATH/$PROJECT/$FAMILY/{PCA,RELATEDNESS} \
 		$CORE_PATH/$PROJECT/$FAMILY/VCF/{RAW,VQSR} \
@@ -514,16 +516,16 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		CREATE_SAMPLE_ARRAY
 		COLLECTHSMETRICS_MT
 		echo sleep 0.1s
-		MUTECT2_MT
-		echo sleep 0.1s
-		FILTER_MUTECT2_MT
-		echo sleep 0.1s
-		MASK_MUTECT2_MT
-		echo sleep 0.1s
-		HAPLOGREP2_MUTECT2_MT
-		echo sleep 0.1s
-		GNOMAD_MUTECT2_MT
-		echo sleep 0.1s
+		# MUTECT2_MT
+		# echo sleep 0.1s
+		# FILTER_MUTECT2_MT
+		# echo sleep 0.1s
+		# MASK_MUTECT2_MT
+		# echo sleep 0.1s
+		# HAPLOGREP2_MUTECT2_MT
+		# echo sleep 0.1s
+		# GNOMAD_MUTECT2_MT
+		# echo sleep 0.1s
 done
 
 ###########################
