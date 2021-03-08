@@ -516,8 +516,8 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		CREATE_SAMPLE_ARRAY
 		COLLECTHSMETRICS_MT
 		echo sleep 0.1s
-		# MUTECT2_MT
-		# echo sleep 0.1s
+		MUTECT2_MT
+		echo sleep 0.1s
 		# FILTER_MUTECT2_MT
 		# echo sleep 0.1s
 		# MASK_MUTECT2_MT
