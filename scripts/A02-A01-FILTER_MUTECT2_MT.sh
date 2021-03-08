@@ -28,13 +28,12 @@
 	CORE_PATH=$2
 
 	PROJECT=$3
-	FAMILY=$4
-	SM_TAG=$5
-	REF_GENOME=$6
+	SM_TAG=$4
+	REF_GENOME=$5
 
-	SAMPLE_SHEET=$7
+	SAMPLE_SHEET=$6
 		SAMPLE_SHEET_NAME=$(basename $SAMPLE_SHEET .csv)
-	SUBMIT_STAMP=$8
+	SUBMIT_STAMP=$7
 
 ## apply recommended filters on mutect2 mito mode vcf output
 #### although I think they are not ultimately helpful since they are based on whole genome autosomal coverage

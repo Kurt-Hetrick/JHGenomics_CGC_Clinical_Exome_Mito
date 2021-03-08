@@ -24,7 +24,7 @@
 
 # INPUT VARIABLES
 
-	ALIGNMENT_CONTAINER=$1
+	MITO_MUTECT2_CONTAINER=$1
 	CORE_PATH=$2
 
 	PROJECT=$3
@@ -41,7 +41,7 @@ START_MASK_MUTECT2_MT=`date '+%s'` # capture time process starts for wall clock 
 
 	# construct command line
 
-		CMD="singularity exec $ALIGNMENT_CONTAINER java -jar" \
+		CMD="singularity exec $MITO_MUTECT2_CONTAINER java -jar" \
 		CMD=$CMD" /gatk/gatk.jar" \
 		CMD=$CMD" VariantFiltration" \
 			CMD=$CMD" --variant $CORE_PATH/$PROJECT/TEMP/$SM_TAG".MUTECT2_MT_FILTERED.vcf"" \
