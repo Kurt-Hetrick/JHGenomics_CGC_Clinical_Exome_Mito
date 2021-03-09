@@ -334,6 +334,7 @@ done
 				$PROJECT \
 				$FAMILY \
 				$SM_TAG \
+				$REF_GENOME \
 				$MT_PICARD_INTERVAL_LIST \
 				$SAMPLE_SHEET \
 				$SUBMIT_STAMP

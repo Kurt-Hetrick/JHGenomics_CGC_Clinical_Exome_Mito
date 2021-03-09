@@ -44,8 +44,11 @@ START_COVERAGE_MT=`date '+%s'` # capture time process starts for wall clock trac
 
 		CMD="singularity exec $MITO_MUTECT2_CONTAINER Rscript" \
 			CMD=$CMD" $MT_COVERAGE_R_SCRIPT" \
+			# input file
 			CMD=$CMD" $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/COLLECTHSMETRICS_MT/$SM_TAG"_per_base_cov.tsv"" \
+			# sample name (or whatever you want the prefix to be for the output file name)
 			CMD=$CMD" $SM_TAG"
+			# directory where you want the output file to go to
 			CMD=$CMD" $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/COLLECTHSMETRICS_MT"
 
 	# write command line to file and execute the command line
