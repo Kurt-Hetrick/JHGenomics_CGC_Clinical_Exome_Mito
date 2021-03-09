@@ -24,33 +24,30 @@
 
 # INPUT VARIABLES
 
-	ALIGNMENT_CONTAINER=$1
-	CORE_PATH=$2
+	CORE_PATH=$1
 
-	PROJECT=$3
+	PROJECT=$2
+	FAMILY=$3
 	SM_TAG=$4
-	ANNOVAR_MT=$5
 
-	SAMPLE_SHEET=$6
+	SAMPLE_SHEET=$5
 		SAMPLE_SHEET_NAME=$(basename $SAMPLE_SHEET .csv)
-	SUBMIT_STAMP=$7
+	SUBMIT_STAMP=$6
 
-## run gnomad on mutect2 vcf annotated with gnomad
+## replace generic annovar headers with descritive headers
 
-START_ANNOVAR_MUTECT2=`date '+%s'` # capture time process starts for wall clock tracking purposes.
+START_FIX_ANNOVAR=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 
 	# construct command line
 
-		CMD="singularity exec $ALIGNMENT_CONTAINER perl" \
-		CMD=$CMD" table_annovar.pl" \
-			CMD=$CMD" $SAMPLE_ID".intermediate.vcf"" \
-			CMD=$CMD" /mnt/research/statgen/gatk-4.1.3.0/annovar_resources/2019/annovar/humandb/" \
-			CMD=$CMD" --buildver GRCh37_MT" \
-			CMD=$CMD" --protocol ensGene,vcf,vcf,vcf,clinvar_20200316,avsnp150" \
-			CMD=$CMD" g,f,f,f,f,f" \
-			CMD=$CMD" --vcfdbfile GRCh37_MT_MMpolymorphisms.vcf,GRCh37_MT_MMdisease.vcf,GRCh37_MT_gnomAD.vcf" \
-			CMD=$CMD" --vcfinput" \
-			CMD=$CMD" --outfile $outdir/$SAMPLE_ID/anno2019vers/withCV_DB150/$SAMPLE_ID" \
+		CMD="sed -i -e '1s/vcf3/gnomAD/'" \
+		CMD=$CMD" -e '1s/vcf2/GB_Freq.MMdisease/'" \
+			CMD=$CMD" -e '1s/vcf/GB_Freq.MMpolymorphisms/'" \
+			CMD=$CMD" -e '1s/Otherinfo11/gnomADplusVCF-INFO/'" \
+			CMD=$CMD" $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_ANNOVAR_MT"/$SM_TAG".GRCh37_MT_multianno.txt"" \
+		CMD=$CMD" &&" \
+			CMD=$CMD" mv -v $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_ANNOVAR_MT"/$SM_TAG".GRCh37_MT_multianno*"" \
+			CMD=$CMD" $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/ANNOVAR_MT/"
 
 	# write command line to file and execute the command line
 
@@ -72,11 +69,11 @@ START_ANNOVAR_MUTECT2=`date '+%s'` # capture time process starts for wall clock 
 			exit $SCRIPT_STATUS
 		fi
 
-END_ANNOVAR_MUTECT2=`date '+%s'` # capture time process starts for wall clock tracking purposes.
+END_FIX_ANNOVAR=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 
 # write out timing metrics to file
 
-	echo $SM_TAG"_"$PROJECT",F.01,ANNOVAR_MUTECT2,"$HOSTNAME","$START_ANNOVAR_MUTECT2","$END_ANNOVAR_MUTECT2 \
+	echo $SM_TAG"_"$PROJECT",F.01,FIX_ANNOVAR,"$HOSTNAME","$START_FIX_ANNOVAR","$END_FIX_ANNOVAR \
 	>> $CORE_PATH/$PROJECT/REPORTS/$PROJECT".WALL.CLOCK.TIMES.csv"
 
 # exit with the signal from samtools bam to cram
