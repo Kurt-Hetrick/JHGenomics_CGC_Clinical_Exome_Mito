@@ -310,10 +310,9 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		SETUP_PROJECT
 done
 
-#########################################
-##### MUTECT2 IN MITO MODE WORKFLOW #####
-##### WORKS ON FULL BAM FILE ############
-#########################################
+######################################################
+##### COVERAGE STATISTICS AND PLOT FOR MT GENOME #####
+######################################################
 
 	##################################################################
 	# RUN COLLECTHSMETRICS ON FULL BAM FILE BUT ONLY ON MT INTERVALS #
@@ -335,11 +334,39 @@ done
 				$PROJECT \
 				$FAMILY \
 				$SM_TAG \
-				$REF_GENOME \
 				$MT_PICARD_INTERVAL_LIST \
 				$SAMPLE_SHEET \
 				$SUBMIT_STAMP
 		}
+
+	###############################################################
+	# RUN ALEX'S R SCRIPT TO GENERATE COVERAGE PLOT FOR MT GENOME #
+	###############################################################
+
+		PLOT_MT_COVERAGE ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A01-A01-PLOT_MT_COVERAGE"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-PLOT_MT_COVERAGE.log" \
+				-hold_jid A01-COLLECTHSMETRICS_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A01-A01_PLOT_MT_COVERAGE.sh \
+				$MITO_MUTECT2_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$FAMILY \
+				$SM_TAG \
+				$MT_COVERAGE_R_SCRIPT \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
+#########################################
+##### MUTECT2 IN MITO MODE WORKFLOW #####
+##### WORKS ON FULL BAM FILE ############
+#########################################
 
 	#####################################################
 	# run mutect2 in mitochondria mode on full bam file #
@@ -515,8 +542,12 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		| uniq );
 	do
 		CREATE_SAMPLE_ARRAY
+		# generate coverage for mt genome
 		COLLECTHSMETRICS_MT
 		echo sleep 0.1s
+		PLOT_MT_COVERAGE
+		echo sleep 0.1s
+		# run mutect2 and then filter, annotate, run haplogrep2
 		MUTECT2_MT
 		echo sleep 0.1s
 		FILTER_MUTECT2_MT

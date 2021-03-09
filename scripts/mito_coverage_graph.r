@@ -9,8 +9,10 @@ covtsv.data <- read.csv(file= args[1], sep = "\t", header = TRUE)
 
 pathname <- c(args[1])
 sampleid <- c(args[2])
+outputdir <- c(args[3])
 titlename <- paste("Coverage for", sampleid, sep=" ")
 pdfname <- paste(sampleid,"_coverage.pdf", sep = "")
+outputfile <- paste(outputdir,pdfname, sep = "/")
 
 
 covplot <- ggplot() + 
@@ -20,6 +22,6 @@ covplot <- ggplot() +
   labs(title = titlename, x = "BP Position", y = "Coverage", caption = pathname)
 
 
-pdf(file= pdfname, width = 13, height = 9)
+pdf(file= outputfile, width = 13, height = 9)
 print(covplot)
 dev.off()
