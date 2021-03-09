@@ -24,36 +24,42 @@
 
 # INPUT VARIABLES
 
-	ALIGNMENT_CONTAINER=$1
+	MITO_EKLIPSE_CONTAINER=$1
 	CORE_PATH=$2
 
 	PROJECT=$3
 	FAMILY=$4
 	SM_TAG=$5
-	REF_GENOME=$6
+	THREADS=$6
 
 	SAMPLE_SHEET=$7
 		SAMPLE_SHEET_NAME=$(basename $SAMPLE_SHEET .csv)
 	SUBMIT_STAMP=$8
 
-## --write lossless cram file. this is the deliverable
+## --extract out the MT reads in the bam file
 
-START_CRAM_TO_BAM_MT=`date '+%s'` # capture time process starts for wall clock tracking purposes.
+START_MAKE_MT_BAM=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 
 	# construct command line
 
-		CMD="singularity exec $ALIGNMENT_CONTAINER samtools" \
+		CMD="singularity exec $MITO_EKLIPSE_CONTAINER samtools" \
 		CMD=$CMD" view" \
-		CMD=$CMD" -b $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/CRAM/$SM_TAG".cram"" \
-		CMD=$CMD" -o $CORE_PATH/$PROJECT/TEMP/$SM_TAG".bam"" \
-		CMD=$CMD" -T $REF_GENOME" \
+		CMD=$CMD" -bh" \
 		CMD=$CMD" -@ $THREADS" \
+		CMD=$CMD" -o $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_MT.bam"" \
+		CMD=$CMD" $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/BAM/$SM_TAG".bam"" \
 		CMD=$CMD" MT" \
 		CMD=$CMD" &&" \
-		CMD=$CMD" singularity exec $ALIGNMENT_CONTAINER samtools" \
+		# index the new bam file
+		CMD=$CMD" singularity exec $MITO_EKLIPSE_CONTAINER samtools" \
 		CMD=$CMD" index" \
-		CMD=$CMD" -o $CORE_PATH/$PROJECT/TEMP/$SM_TAG".bam"" \
-		CMD=$CMD" -@ $THREADS"
+		CMD=$CMD" $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_MT.bam"" \
+		CMD=$CMD" -@ $THREADS" \
+		CMD=$CMD" &&" \
+		# eklipse for some reason reads in a text file with the file path and ?sample name?
+		# so generating that now
+		CMD=$CMD" echo -e $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_MT.bam"'\t'$SM_TAG" \
+		CMD=$CMD" >| $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_EKLIPSE_CONFIG.txt""
 
 	# write command line to file and execute the command line
 
@@ -75,11 +81,11 @@ START_CRAM_TO_BAM_MT=`date '+%s'` # capture time process starts for wall clock t
 			exit $SCRIPT_STATUS
 		fi
 
-END_CRAM_TO_BAM_MT=`date '+%s'` # capture time process starts for wall clock tracking purposes.
+END_MAKE_MT_BAM=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 
 # write out timing metrics to file
 
-	echo $SM_TAG"_"$PROJECT",F.01,CRAM_TO_BAM_MT,"$HOSTNAME","$START_CRAM_TO_BAM_MT","$END_CRAM_TO_BAM_MT \
+	echo $SM_TAG"_"$PROJECT",F.01,MAKE_MT_BAM,"$HOSTNAME","$START_MAKE_MT_BAM","$END_MAKE_MT_BAM \
 	>> $CORE_PATH/$PROJECT/REPORTS/$PROJECT".WALL.CLOCK.TIMES.csv"
 
 # exit with the signal from samtools bam to cram

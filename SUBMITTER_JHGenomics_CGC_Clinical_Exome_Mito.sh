@@ -123,8 +123,6 @@
 	MITO_EKLIPSE_CONTAINER="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/containers/mito_eklipse-master-c25931b.0.simg"
 		# https://github.com/dooguypapua/eKLIPse AND all of its dependencies
 
-	COMBINE_ANNOVAR_WITH_SPLICING_R_CONTAINER="/mnt/clinical/ddl/NGS/CFTR_Full_Gene_Sequencing_Pipeline/containers/r-cftr-3.4.4.1.simg"
-
 	MT_COVERAGE_R_SCRIPT="$SCRIPT_DIR/mito_coverage_graph.r"
 
 ##################
@@ -532,6 +530,33 @@ done
 				$SUBMIT_STAMP
 		}
 
+##############################################################
+##### RUN EKLIPSE TO DETECT LARGE DELETIONS IN MT GENOME #####
+##############################################################
+
+	############################################
+	# SUBSET BAM FILE TO CONTAIN ONLY MT READS #
+	############################################
+
+		SUBSET_BAM_MT ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A03-MAKE_BAM_MT"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-MAKE_BAM_MT.log" \
+			$SCRIPT_DIR/A03-MAKE_MT_BAM.sh \
+				$MITO_EKLIPSE_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$FAMILY \
+				$SM_TAG \
+				$THREADS \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
 ###############################################################
 # run steps centered on gatk's mutect2 mitochondrial workflow #
 ###############################################################
@@ -563,50 +588,10 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		echo sleep 0.1s
 		FIX_ANNOVAR_MUTECT2_MT
 		echo sleep 0.1s
+		# run eklipse workflow
+		SUBSET_BAM_MT
+		echo sleep 0.1s
 done
-
-###########################
-#### EKLIPSE WORKFLOW #####
-###########################
-
-	##############################################################
-	# convert cram file back to bam just for mitochondrial reads #
-	##############################################################
-
-		SUBSET_BAM_MT ()
-		{
-			echo \
-			qsub \
-				$QSUB_ARGS \
-				$STANDARD_QUEUE_QSUB_ARG \
-			-N A01-SUBSET_BAM_MT"_"$SGE_SM_TAG"_"$PROJECT \
-				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-SUBSET_BAM_MT.log" \
-			$SCRIPT_DIR/A01-SUBSET_BAM_MT.sh \
-				$MITO_MUTECT2_CONTAINER \
-				$CORE_PATH \
-				$PROJECT \
-				$FAMILY \
-				$SM_TAG \
-				$REF_GENOME \
-				$THREADS \
-				$SAMPLE_SHEET \
-				$SUBMIT_STAMP
-		}
-
-##################################
-# run steps for eklipse workflow #
-##################################
-
-# for SAMPLE in $(awk 1 $SAMPLE_SHEET \
-# 		| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
-# 		| awk 'BEGIN {FS=","} NR>1 {print $8}' \
-# 		| sort \
-# 		| uniq );
-# 	do
-# 		CREATE_SAMPLE_ARRAY
-# 		CRAM_TO_BAM_MT
-# 		echo sleep 0.1s
-# done
 
 #############################
 ##### END PROJECT TASKS #####
