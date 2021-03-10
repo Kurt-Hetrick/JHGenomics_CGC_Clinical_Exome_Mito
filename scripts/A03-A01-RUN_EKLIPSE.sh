@@ -30,36 +30,31 @@
 	PROJECT=$3
 	FAMILY=$4
 	SM_TAG=$5
-	THREADS=$6
+	MT_GENBANK=$6
+	THREADS=$7
 
-	SAMPLE_SHEET=$7
+	SAMPLE_SHEET=$8
 		SAMPLE_SHEET_NAME=$(basename $SAMPLE_SHEET .csv)
-	SUBMIT_STAMP=$8
+	SUBMIT_STAMP=$9
 
 ## --extract out the MT reads in the bam file
 
-START_MAKE_MT_BAM=`date '+%s'` # capture time process starts for wall clock tracking purposes.
+START_RUN_EKLIPSE=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 
 	# construct command line
 
-		CMD="singularity exec $MITO_EKLIPSE_CONTAINER samtools" \
-		CMD=$CMD" view" \
-		CMD=$CMD" -bh" \
-		CMD=$CMD" -@ $THREADS" \
-		CMD=$CMD" -o $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_MT.bam"" \
-		CMD=$CMD" $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/BAM/$SM_TAG".bam"" \
-		CMD=$CMD" MT" \
-		CMD=$CMD" &&" \
-		# index the new bam file
-		CMD=$CMD" singularity exec $MITO_EKLIPSE_CONTAINER samtools" \
-		CMD=$CMD" index" \
-		CMD=$CMD" $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_MT.bam"" \
-		CMD=$CMD" -@ $THREADS" \
-		CMD=$CMD" &&" \
-		# eklipse for some reason reads in a text file with the file path and a title (sample name)
-		# so generating that now
-		CMD=$CMD" echo -e $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_MT.bam"'\t'$SM_TAG" \
-		CMD=$CMD" >| $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_EKLIPSE_CONFIG.txt""
+		CMD="singularity exec $MITO_EKLIPSE_CONTAINER eKLIPse.py" \
+		CMD=$CMD" -in $CORE_PATH/$PROJECT/TEMP/$SM_TAG"_EKLIPSE_CONFIG.txt"" \
+		CMD=$CMD" -ref $MT_GENBANK" \
+		# CMD=$CMD" -samtools /usr/bin/samtools" \
+		# CMD=$CMD" -blastn /eklipse/dependencies/ncbi-blast-2.11.0+/bin/blastn" \
+		# CMD=$CMD" -circos /eklipse/dependencies/circos-0.69-6/bin/circos" \
+		# CMD=$CMD" -makeblastdb /eklipse/dependencies/ncbi-blast-2.11.0+/bin/makeblastdb" \
+		CMD=$CMD" -thread $THREADS" \
+		CMD=$CMD" -downcov 0" \
+		CMD=$CMD" -scsize 15" \
+		CMD=$CMD" -mapsize 10" \
+		CMD=$CMD" -out $CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/EKLIPSE"
 
 	# write command line to file and execute the command line
 
@@ -81,11 +76,11 @@ START_MAKE_MT_BAM=`date '+%s'` # capture time process starts for wall clock trac
 			exit $SCRIPT_STATUS
 		fi
 
-END_MAKE_MT_BAM=`date '+%s'` # capture time process starts for wall clock tracking purposes.
+END_RUN_EKLIPSE=`date '+%s'` # capture time process starts for wall clock tracking purposes.
 
 # write out timing metrics to file
 
-	echo $SM_TAG"_"$PROJECT",F.01,MAKE_MT_BAM,"$HOSTNAME","$START_MAKE_MT_BAM","$END_MAKE_MT_BAM \
+	echo $SM_TAG"_"$PROJECT",F.01,RUN_EKLIPSE,"$HOSTNAME","$START_RUN_EKLIPSE","$END_RUN_EKLIPSE \
 	>> $CORE_PATH/$PROJECT/REPORTS/$PROJECT".WALL.CLOCK.TIMES.csv"
 
 # exit with the signal from samtools bam to cram

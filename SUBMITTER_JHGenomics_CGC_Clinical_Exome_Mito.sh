@@ -137,6 +137,8 @@
 
 	ANNOVAR_MT_DB_DIR="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/resources/annovar_db/"
 
+	MT_GENBANK="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/resources/NC_012920.1.gb"
+
 #################################
 ##### MAKE A DIRECTORY TREE #####
 #################################
@@ -286,7 +288,7 @@
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/INSERT_SIZE/{METRICS,PDF} \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/MEAN_QUALITY_BY_CYCLE/{METRICS,PDF} \
 		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/REPORTS/PRE_ADAPTER/{METRICS,SUMMARY} \
-		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/{COLLECTHSMETRICS_MT,MUTECT2_MT,HAPLOTYPES,ANNOVAR_MT} \
+		$CORE_PATH/$PROJECT/$FAMILY/$SM_TAG/MT_OUTPUT/{COLLECTHSMETRICS_MT,MUTECT2_MT,HAPLOTYPES,ANNOVAR_MT,EKLIPSE} \
 		$CORE_PATH/$PROJECT/TEMP/$SM_TAG"_ANNOVAR_MT"
 	}
 
@@ -557,6 +559,31 @@ done
 				$SUBMIT_STAMP
 		}
 
+	############################################
+	# SUBSET BAM FILE TO CONTAIN ONLY MT READS #
+	############################################
+
+		RUN_EKLIPSE ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A03-A01-RUN_EKLIPSE"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-RUN_EKLIPSE.log" \
+				-hold_jid A03-MAKE_BAM_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A03-A01-RUN_EKLIPSE.sh \
+				$MITO_EKLIPSE_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$FAMILY \
+				$SM_TAG \
+				$MT_GENBANK \
+				$THREADS \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
 ###############################################################
 # run steps centered on gatk's mutect2 mitochondrial workflow #
 ###############################################################
@@ -590,6 +617,8 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		echo sleep 0.1s
 		# run eklipse workflow
 		SUBSET_BAM_MT
+		echo sleep 0.1s
+		RUN_EKLIPSE
 		echo sleep 0.1s
 done
 
