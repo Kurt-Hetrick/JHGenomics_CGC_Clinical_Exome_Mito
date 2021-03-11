@@ -77,6 +77,14 @@
 
 		SUBMITTER_ID=`whoami`
 
+	# grab email addy
+
+		SEND_TO=`cat $SCRIPT_DIR/../email_lists.txt`
+
+	# grab submitter's name
+
+		PERSON_NAME=`getent passwd | awk 'BEGIN {FS=":"} $1=="'$SUBMITTER_ID'" {print $5}'`
+
 	# bind the host file system /mnt to the singularity container. in case I use it in the submitter.
 
 		export SINGULARITY_BINDPATH="/mnt:/mnt"
@@ -104,10 +112,6 @@
 			# THIS IS DEFINED AS AN INPUT ARGUMENT VARIABLE TO THE PIPELINE (DEFAULT: cgc.q)
 
 				STANDARD_QUEUE_QSUB_ARG=" -q $QUEUE_LIST"
-
-			# REQUESTING AN ENTIRE SERVER (specifically for cgc.q)
-
-				REQUEST_ENTIRE_SERVER_QSUB_ARG=" -pe slots 5"
 
 #####################
 # PIPELINE PROGRAMS #
@@ -310,60 +314,6 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		SETUP_PROJECT
 done
 
-######################################################
-##### COVERAGE STATISTICS AND PLOT FOR MT GENOME #####
-######################################################
-
-	##################################################################
-	# RUN COLLECTHSMETRICS ON FULL BAM FILE BUT ONLY ON MT INTERVALS #
-	# USES GATK IMPLEMENTATION INSTEAD OF PICARD TOOLS ###############
-	# NOT REALLY PART OF MUTECT2 WORKFLOW BUT USES FULL BAM FILE #####
-	##################################################################
-
-		COLLECTHSMETRICS_MT ()
-		{
-			echo \
-			qsub \
-				$QSUB_ARGS \
-				$STANDARD_QUEUE_QSUB_ARG \
-			-N A01-COLLECTHSMETRICS_MT"_"$SGE_SM_TAG"_"$PROJECT \
-				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-COLLECTHSMETRICS_MT.log" \
-			$SCRIPT_DIR/A01-COLLECTHSMETRICS_MT.sh \
-				$MITO_MUTECT2_CONTAINER \
-				$CORE_PATH \
-				$PROJECT \
-				$FAMILY \
-				$SM_TAG \
-				$REF_GENOME \
-				$MT_PICARD_INTERVAL_LIST \
-				$SAMPLE_SHEET \
-				$SUBMIT_STAMP
-		}
-
-	###############################################################
-	# RUN ALEX'S R SCRIPT TO GENERATE COVERAGE PLOT FOR MT GENOME #
-	###############################################################
-
-		PLOT_MT_COVERAGE ()
-		{
-			echo \
-			qsub \
-				$QSUB_ARGS \
-				$STANDARD_QUEUE_QSUB_ARG \
-			-N A01-A01-PLOT_MT_COVERAGE"_"$SGE_SM_TAG"_"$PROJECT \
-				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-PLOT_MT_COVERAGE.log" \
-				-hold_jid A01-COLLECTHSMETRICS_MT"_"$SGE_SM_TAG"_"$PROJECT \
-			$SCRIPT_DIR/A01-A01_PLOT_MT_COVERAGE.sh \
-				$MITO_MUTECT2_CONTAINER \
-				$CORE_PATH \
-				$PROJECT \
-				$FAMILY \
-				$SM_TAG \
-				$MT_COVERAGE_R_SCRIPT \
-				$SAMPLE_SHEET \
-				$SUBMIT_STAMP
-		}
-
 #########################################
 ##### MUTECT2 IN MITO MODE WORKFLOW #####
 ##### WORKS ON FULL BAM FILE ############
@@ -379,9 +329,9 @@ done
 			qsub \
 				$QSUB_ARGS \
 				$STANDARD_QUEUE_QSUB_ARG \
-			-N A02-MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			-N A01-MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-MUTECT2_MT.log" \
-			$SCRIPT_DIR/A02-MUTECT2_MT.sh \
+			$SCRIPT_DIR/A01-MUTECT2_MT.sh \
 				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
@@ -402,10 +352,10 @@ done
 			qsub \
 				$QSUB_ARGS \
 				$STANDARD_QUEUE_QSUB_ARG \
-			-N A02-A01-FILTER_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			-N A01-A01-FILTER_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-FILTER_MUTECT2_MT.log" \
-				-hold_jid A02-MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
-			$SCRIPT_DIR/A02-A01-FILTER_MUTECT2_MT.sh \
+				-hold_jid A01-MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A01-A01-FILTER_MUTECT2_MT.sh \
 				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
@@ -425,10 +375,10 @@ done
 			qsub \
 				$QSUB_ARGS \
 				$STANDARD_QUEUE_QSUB_ARG \
-			-N A02-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			-N A01-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-MASK_MUTECT2_MT.log" \
-				-hold_jid A02-A01-FILTER_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
-			$SCRIPT_DIR/A02-A01-A01-MASK_MUTECT2_MT.sh \
+				-hold_jid A01-A01-FILTER_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A01-A01-A01-MASK_MUTECT2_MT.sh \
 				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
@@ -448,10 +398,10 @@ done
 			qsub \
 				$QSUB_ARGS \
 				$STANDARD_QUEUE_QSUB_ARG \
-			-N A02-A01-A01-A01-HAPLOGREP2_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			-N A01-A01-A01-A01-HAPLOGREP2_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-HAPLOGREP2_MUTECT2_MT.log" \
-				-hold_jid A02-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
-			$SCRIPT_DIR/A02-A01-A01-A01-HAPLOGREP2_MUTECT2_MT.sh \
+				-hold_jid A01-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A01-A01-A01-A01-HAPLOGREP2_MUTECT2_MT.sh \
 				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
@@ -472,10 +422,10 @@ done
 			qsub \
 				$QSUB_ARGS \
 				$STANDARD_QUEUE_QSUB_ARG \
-			-N A02-A01-A01-A02-GNOMAD_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			-N A01-A01-A01-A02-GNOMAD_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-GNOMAD_MUTECT2_MT.log" \
-				-hold_jid A02-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
-			$SCRIPT_DIR/A02-A01-A01-A02-GNOMAD_MUTECT2_MT.sh \
+				-hold_jid A01-A01-A01-MASK_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A01-A01-A01-A02-GNOMAD_MUTECT2_MT.sh \
 				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
@@ -496,10 +446,10 @@ done
 			qsub \
 				$QSUB_ARGS \
 				$STANDARD_QUEUE_QSUB_ARG \
-			-N A02-A01-A01-A02-A01-RUN_ANNOVAR_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			-N A01-A01-A01-A02-A01-RUN_ANNOVAR_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-RUN_ANNOVAR_MUTECT2_MT.log" \
-				-hold_jid A02-A01-A01-A02-GNOMAD_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
-			$SCRIPT_DIR/A02-A01-A01-A02-A01-RUN_ANNOVAR_MUTECT2_MT.sh \
+				-hold_jid A01-A01-A01-A02-GNOMAD_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A01-A01-A01-A02-A01-RUN_ANNOVAR_MUTECT2_MT.sh \
 				$MITO_MUTECT2_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
@@ -520,10 +470,10 @@ done
 			qsub \
 				$QSUB_ARGS \
 				$STANDARD_QUEUE_QSUB_ARG \
-			-N A02-A01-A01-A02-A01-A01-FIX_ANNOVAR_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			-N A01-A01-A01-A02-A01-A01-FIX_ANNOVAR_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-FIX_ANNOVAR_MUTECT2_MT.log" \
-				-hold_jid A02-A01-A01-A02-A01-RUN_ANNOVAR_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
-			$SCRIPT_DIR/A02-A01-A01-A02-A01-A01-FIX_ANNOVAR_MUTECT2_MT.sh \
+				-hold_jid A01-A01-A01-A02-A01-RUN_ANNOVAR_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A01-A01-A01-A02-A01-A01-FIX_ANNOVAR_MUTECT2_MT.sh \
 				$CORE_PATH \
 				$PROJECT \
 				$FAMILY \
@@ -546,9 +496,9 @@ done
 			qsub \
 				$QSUB_ARGS \
 				$STANDARD_QUEUE_QSUB_ARG \
-			-N A03-MAKE_BAM_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			-N A02-MAKE_BAM_MT"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-MAKE_BAM_MT.log" \
-			$SCRIPT_DIR/A03-MAKE_MT_BAM.sh \
+			$SCRIPT_DIR/A02-MAKE_MT_BAM.sh \
 				$MITO_EKLIPSE_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
@@ -569,10 +519,10 @@ done
 			qsub \
 				$QSUB_ARGS \
 				$STANDARD_QUEUE_QSUB_ARG \
-			-N A03-A01-RUN_EKLIPSE"_"$SGE_SM_TAG"_"$PROJECT \
+			-N A02-A01-RUN_EKLIPSE"_"$SGE_SM_TAG"_"$PROJECT \
 				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-RUN_EKLIPSE.log" \
-				-hold_jid A03-MAKE_BAM_MT"_"$SGE_SM_TAG"_"$PROJECT \
-			$SCRIPT_DIR/A03-A01-RUN_EKLIPSE.sh \
+				-hold_jid A02-MAKE_BAM_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A02-A01-RUN_EKLIPSE.sh \
 				$MITO_EKLIPSE_CONTAINER \
 				$CORE_PATH \
 				$PROJECT \
@@ -580,6 +530,60 @@ done
 				$SM_TAG \
 				$MT_GENBANK \
 				$THREADS \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
+######################################################
+##### COVERAGE STATISTICS AND PLOT FOR MT GENOME #####
+######################################################
+
+	##############################################################
+	# RUN COLLECTHSMETRICS ON MT ONLY BAM FILE ###################
+	# USES GATK IMPLEMENTATION INSTEAD OF PICARD TOOLS ###########
+	##############################################################
+
+		COLLECTHSMETRICS_MT ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A02-A02-COLLECTHSMETRICS_MT"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-COLLECTHSMETRICS_MT.log" \
+				-hold_jid A02-MAKE_BAM_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A02-A02-COLLECTHSMETRICS_MT.sh \
+				$MITO_MUTECT2_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$FAMILY \
+				$SM_TAG \
+				$REF_GENOME \
+				$MT_PICARD_INTERVAL_LIST \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
+	###############################################################
+	# RUN ALEX'S R SCRIPT TO GENERATE COVERAGE PLOT FOR MT GENOME #
+	###############################################################
+
+		PLOT_MT_COVERAGE ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N A02-A02-A01-PLOT_MT_COVERAGE"_"$SGE_SM_TAG"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$SM_TAG/$SM_TAG"-PLOT_MT_COVERAGE.log" \
+				-hold_jid A02-A02-COLLECTHSMETRICS_MT"_"$SGE_SM_TAG"_"$PROJECT \
+			$SCRIPT_DIR/A02-A02-A01_PLOT_MT_COVERAGE.sh \
+				$MITO_MUTECT2_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$FAMILY \
+				$SM_TAG \
+				$MT_COVERAGE_R_SCRIPT \
 				$SAMPLE_SHEET \
 				$SUBMIT_STAMP
 		}
@@ -595,11 +599,6 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		| uniq );
 	do
 		CREATE_SAMPLE_ARRAY
-		# generate coverage for mt genome
-		COLLECTHSMETRICS_MT
-		echo sleep 0.1s
-		PLOT_MT_COVERAGE
-		echo sleep 0.1s
 		# run mutect2 and then filter, annotate, run haplogrep2
 		MUTECT2_MT
 		echo sleep 0.1s
@@ -620,19 +619,16 @@ for SAMPLE in $(awk 1 $SAMPLE_SHEET \
 		echo sleep 0.1s
 		RUN_EKLIPSE
 		echo sleep 0.1s
+		# generate coverage for mt genome
+		COLLECTHSMETRICS_MT
+		echo sleep 0.1s
+		PLOT_MT_COVERAGE
+		echo sleep 0.1s
 done
 
 #############################
 ##### END PROJECT TASKS #####
 #############################
-
-# # grab email addy
-
-# 	SEND_TO=`cat $SCRIPT_DIR/../email_lists.txt`
-
-# # grab submitter's name
-
-# 	PERSON_NAME=`getent passwd | awk 'BEGIN {FS=":"} $1=="'$SUBMITTER_ID'" {print $5}'`
 
 # # build hold id for qc report prep per sample, per project
 
@@ -660,10 +656,10 @@ done
 # 		qsub \
 # 			$QSUB_ARGS \
 # 			$STANDARD_QUEUE_QSUB_ARG \
-# 		-N X.01-X.01_END_PROJECT_TASKS"_"$PROJECT \
+# 		-N B.01_END_PROJECT_TASKS"_"$PROJECT \
 # 			-o $CORE_PATH/$PROJECT/LOGS/$PROJECT"-END_PROJECT_TASKS.log" \
 # 		$HOLD_ID_PATH \
-# 		$SCRIPT_DIR/X.01-X.01-END_PROJECT_TASKS.sh \
+# 		$SCRIPT_DIR/b.01-END_PROJECT_TASKS.sh \
 # 			$MITO_MUTECT2_CONTAINER \
 # 			$CORE_PATH \
 # 			$PROJECT \
@@ -687,14 +683,14 @@ done
 # 		PROJECT_WRAP_UP
 # done
 
-# # MESSAGE THAT SAMPLE SHEET HAS FINISHED SUBMITTING
+# MESSAGE THAT SAMPLE SHEET HAS FINISHED SUBMITTING
 
-# printf "echo\n"
+	printf "echo\n"
 
-# printf "echo $SAMPLE_SHEET has finished submitting at `date`\n"
+	printf "echo $SAMPLE_SHEET has finished submitting at `date`\n"
 
-# # EMAIL WHEN DONE SUBMITTING
+# EMAIL WHEN DONE SUBMITTING
 
-# printf "$SAMPLE_SHEET\nhas finished submitting at\n`date`\nby `whoami`" \
-# 	| mail -s "$PERSON_NAME has submitted SUBMITTER_CFTR_Full_Gene_Sequencing_Pipeline.sh" \
-# 		$SEND_TO
+	printf "$SAMPLE_SHEET\nhas finished submitting at\n`date`\nby `whoami`" \
+		| mail -s "$PERSON_NAME has submitted SUBMITTER_JHGenomics_CGC_Clinical_Exome_Mito.sh" \
+			$SEND_TO
