@@ -129,6 +129,38 @@
 
 	MT_COVERAGE_R_SCRIPT="$SCRIPT_DIR/mito_coverage_graph.r"
 
+	ALIGNMENT_CONTAINER="/mnt/clinical/ddl/NGS/Exome_Resources/PIPELINES/JHGenomics_CGC_Clinical_Exome_Mito/containers/ddl_ce_control_align-0.0.4.simg" # just used for the end tasks wrap up (datamash,parallel).
+		# contains the following software and is on Ubuntu 16.04.5 LTS
+			# gatk 4.0.11.0 (base image). also contains the following.
+				# Python 3.6.2 :: Continuum Analytics, Inc.
+					# samtools 0.1.19
+					# bcftools 0.1.19
+					# bedtools v2.25.0
+					# bgzip 1.2.1
+					# tabix 1.2.1
+					# samtools, bcftools, bgzip and tabix will be replaced with newer versions.
+					# R 3.2.5
+						# dependencies = c("gplots","digest", "gtable", "MASS", "plyr", "reshape2", "scales", "tibble", "lazyeval")    # for ggplot2
+						# getopt_1.20.0.tar.gz
+						# optparse_1.3.2.tar.gz
+						# data.table_1.10.4-2.tar.gz
+						# gsalib_2.1.tar.gz
+						# ggplot2_2.2.1.tar.gz
+					# openjdk version "1.8.0_181"
+					# /gatk/gatk.jar -> /gatk/gatk-package-4.0.11.0-local.jar
+			# added
+				# picard.jar 2.17.0 (as /gatk/picard.jar)
+				# samblaster-v.0.1.24
+				# sambamba-0.6.8
+				# bwa-0.7.15
+				# datamash-1.6
+				# verifyBamID v1.1.3
+				# samtools 1.10
+				# bgzip 1.10
+				# tabix 1.10
+				# bcftools 1.10.2
+				# parallel 20161222
+
 ##################
 # PIPELINE FILES #
 ##################
@@ -302,7 +334,7 @@
 		MERGE_PED_MANIFEST
 		CREATE_SAMPLE_ARRAY
 		MAKE_PROJ_DIR_TREE
-		echo Project started at `date` >| $CORE_PATH/$PROJECT/REPORTS/PROJECT_START_END_TIMESTAMP.txt
+		echo MT pipeline started at `date` >| $CORE_PATH/$PROJECT/REPORTS/PROJECT_START_END_TIMESTAMP.txt
 	}
 
 for SAMPLE in $(awk 1 $SAMPLE_SHEET \
@@ -630,58 +662,62 @@ done
 ##### END PROJECT TASKS #####
 #############################
 
-# # build hold id for qc report prep per sample, per project
+	# build hold id for qc report prep per sample, per project
 
-# 	BUILD_HOLD_ID_PATH_PROJECT_WRAP_UP ()
-# 	{
-# 		HOLD_ID_PATH="-hold_jid "
+		BUILD_HOLD_ID_PATH_PROJECT_WRAP_UP ()
+		{
+			HOLD_ID_PATH="-hold_jid "
 
-# 		for SAMPLE in $(awk 1 $SAMPLE_SHEET \
-# 			| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
-# 			| awk 'BEGIN {FS=","} $1=="'$PROJECT'" {print $8}' \
-# 			| sort \
-# 			| uniq);
-# 		do
-# 			CREATE_SAMPLE_ARRAY
-# 			HOLD_ID_PATH=$HOLD_ID_PATH"X.01_QC_REPORT_PREP"_"$SGE_SM_TAG"_"$PROJECT"","
-# 			HOLD_ID_PATH=`echo $HOLD_ID_PATH | sed 's/@/_/g'`
-# 		done
-# 	}
+			for SAMPLE in $(awk 1 $SAMPLE_SHEET \
+				| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
+				| awk 'BEGIN {FS=","} $1=="'$PROJECT'" {print $8}' \
+				| sort \
+				| uniq);
+			do
+				CREATE_SAMPLE_ARRAY
 
-# # run end project functions (qc report, file clean-up) for each project
+				HOLD_ID_PATH=$HOLD_ID_PATH"A02-A02-A01-PLOT_MT_COVERAGE"_"$SGE_SM_TAG"_"$PROJECT"",""A02-A01-RUN_EKLIPSE"_"$SGE_SM_TAG"_"$PROJECT"",""A01-A01-A01-A02-A01-A01-FIX_ANNOVAR_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT"",""A01-A01-A01-A01-HAPLOGREP2_MUTECT2_MT"_"$SGE_SM_TAG"_"$PROJECT"","
 
-# 	PROJECT_WRAP_UP ()
-# 	{
-# 		echo \
-# 		qsub \
-# 			$QSUB_ARGS \
-# 			$STANDARD_QUEUE_QSUB_ARG \
-# 		-N B.01_END_PROJECT_TASKS"_"$PROJECT \
-# 			-o $CORE_PATH/$PROJECT/LOGS/$PROJECT"-END_PROJECT_TASKS.log" \
-# 		$HOLD_ID_PATH \
-# 		$SCRIPT_DIR/b.01-END_PROJECT_TASKS.sh \
-# 			$MITO_MUTECT2_CONTAINER \
-# 			$CORE_PATH \
-# 			$PROJECT \
-# 			$SCRIPT_DIR \
-# 			$SUBMITTER_ID \
-# 			$SAMPLE_SHEET \
-# 			$SUBMIT_STAMP \
-# 			$SEND_TO \
-# 			$THREADS
-# 	}
+				HOLD_ID_PATH=`echo $HOLD_ID_PATH | sed 's/@/_/g'`
+			done
+		}
 
-# # final loop
+	# run end project functions (md5, file clean-up) for each project
 
-# for PROJECT in $(awk 1 $SAMPLE_SHEET \
-# 			| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
-# 			| awk 'BEGIN {FS=","} NR>1 {print $1}' \
-# 			| sort \
-# 			| uniq);
-# 	do
-# 		BUILD_HOLD_ID_PATH_PROJECT_WRAP_UP
-# 		PROJECT_WRAP_UP
-# done
+		PROJECT_WRAP_UP ()
+		{
+			echo \
+			qsub \
+				$QSUB_ARGS \
+				$STANDARD_QUEUE_QSUB_ARG \
+			-N X.01_END_PROJECT_TASKS"_"$PROJECT \
+				-o $CORE_PATH/$PROJECT/LOGS/$PROJECT"-END_PROJECT_TASKS.log" \
+			$HOLD_ID_PATH \
+			$SCRIPT_DIR/X.01-END_PROJECT_TASKS.sh \
+				$ALIGNMENT_CONTAINER \
+				$CORE_PATH \
+				$PROJECT \
+				$SCRIPT_DIR \
+				$SEND_TO \
+				$SUBMITTER_ID \
+				$THREADS \
+				$SAMPLE_SHEET \
+				$SUBMIT_STAMP
+		}
+
+##############
+# final loop #
+##############
+
+for PROJECT in $(awk 1 $SAMPLE_SHEET \
+			| sed 's/\r//g; /^$/d; /^[[:space:]]*$/d; /^,/d' \
+			| awk 'BEGIN {FS=","} NR>1 {print $1}' \
+			| sort \
+			| uniq);
+	do
+		BUILD_HOLD_ID_PATH_PROJECT_WRAP_UP
+		PROJECT_WRAP_UP
+done
 
 # MESSAGE THAT SAMPLE SHEET HAS FINISHED SUBMITTING
 
