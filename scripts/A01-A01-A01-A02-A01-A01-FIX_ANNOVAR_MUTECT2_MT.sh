@@ -40,7 +40,7 @@ START_FIX_ANNOVAR=`date '+%s'` # capture time process starts for wall clock trac
 
 	# construct command line
 
-		CMD="sed -i -e '1s/vcf3/gnomAD/'" \
+		CMD="sed -i -e '1s/vcf3/gnomAD\[exclude_AC\/AN\]/'" \
 		CMD=$CMD" -e '1s/vcf2/GB_Freq.MMdisease/'" \
 			CMD=$CMD" -e '1s/vcf/GB_Freq.MMpolymorphisms/'" \
 			CMD=$CMD" -e '1s/Otherinfo11/gnomADplusVCF-INFO/'" \
