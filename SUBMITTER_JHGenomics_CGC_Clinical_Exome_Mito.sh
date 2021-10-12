@@ -210,8 +210,8 @@
 	CREATE_SAMPLE_ARRAY ()
 	{
 		SAMPLE_ARRAY=(`awk 'BEGIN {FS="\t"; OFS="\t"} $8=="'$SAMPLE'" \
-			{split($18,INDEL,";"); \
-			print $1,$8,$9,$10,$12,$14,$15,$16,$17,INDEL[1],INDEL[2],$20,$21,$22,$23,$24}' \
+			{split($19,INDEL,";"); \
+			print $1,$8,$9,$10,$12,$15,$16,$17,$18,INDEL[1],INDEL[2],$20,$21,$22,$23,$24}' \
 				~/CGC_PIPELINE_TEMP/$MANIFEST_PREFIX.$PED_PREFIX.join.txt \
 				| sort \
 				| uniq`)
